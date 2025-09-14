@@ -1,0 +1,23 @@
+---
+- name: Detect packaging type
+  ansible.builtin.set_fact:
+    slurm_drmaa_pkg_type: "{{ 'deb' if ansible_os_family == 'Debian' else 'rpm' }}"
+
+- name: Include source build tasks
+  ansible.builtin.include_tasks: source.yml
+  when: slurm_drmaa_install_mode == 'source'
+
+- name: Include Debian packaging tasks
+  ansible.builtin.include_tasks: deb.yml
+  when:
+    - slurm_drmaa_install_mode == 'package'
+    - slurm_drmaa_pkg_type == 'deb'
+
+- name: Include RPM packaging tasks
+  ansible.builtin.include_tasks: rpm.yml
+  when:
+    - slurm_drmaa_install_mode == 'package'
+    - slurm_drmaa_pkg_type == 'rpm'
+
+- name: Include fetch task
+  ansible.builtin.include_tasks: fetch.yml

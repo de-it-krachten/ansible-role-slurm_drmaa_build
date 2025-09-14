@@ -1,0 +1,22 @@
+Source: slurm-drmaa
+Section: libs
+Priority: optional
+Maintainer: {{ maintainer_name }} <{{ maintainer_email }}>
+Build-Depends: debhelper-compat (= 13),
+               dh-autoreconf,
+               autotools-dev,
+               autoconf,
+               automake,
+               libtool,
+               libslurm-dev (>= 23.11)
+Standards-Version: 4.6.2
+Homepage: https://github.com/natefoo/slurm-drmaa
+Rules-Requires-Root: no
+
+Package: slurm-drmaa
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: DRMAA library for Slurm
+ Implementation of the DRMAA API for the Slurm workload manager,
+ allowing applications to submit and control jobs to Slurm
+ through a standard interface.
