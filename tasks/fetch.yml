@@ -1,0 +1,14 @@
+---
+- name: Ensure local packages directory exists on control node
+  delegate_to: localhost
+  ansible.builtin.file:
+    path: "./packages/{{ inventory_hostname }}"
+    state: directory
+    mode: '0755'
+
+- name: Fetch built packages back to control node
+  ansible.builtin.fetch:
+    src: "{{ item }}"
+    dest: "/tmp/{{ item | basename }}"
+    flat: true
+  loop: "{{ slurm_drmaa_built_packages }}"

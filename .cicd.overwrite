@@ -1,0 +1,55 @@
+---
+
+# Generic
+generic:
+  role: ansible-role-slurm_drmaa_build
+  role_short: slurm_drmaa_build
+  role_description: |
+    Create packages for Slurm DRMAA
+  collections: []
+
+# Supported platforms
+platforms:
+  rhel10:
+    supported: false
+    ci: false
+  rockylinux10:
+    supported: false
+    ci: false
+  oraclelinux10:
+    supported: false
+    ci: false
+  almalinux10:
+    supported: false
+    ci: false
+  debian13:
+    supported: false
+    ci: false
+  fedora42:
+    supported: false
+    ci: false
+  fedora43:
+    supported: false
+    ci: false
+
+# Molecule
+molecule:
+  requirements:
+    roles_extra: []
+  prepare:
+    vars:
+      activate_epel: true
+  scenario:
+    test_sequence:
+      - dependency
+      - cleanup
+      - destroy
+      - syntax
+      - create
+      - prepare
+      - converge
+      # - idempotence
+      - side_effect
+      - verify
+      - cleanup
+      - destroy
