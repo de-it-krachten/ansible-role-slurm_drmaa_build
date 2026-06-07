@@ -12,7 +12,7 @@
       - tar
     state: present
     update_cache: yes
-  when: ansible_os_family == "Debian"
+  when: ansible_facts.os_family == "Debian"
 
 - name: Ensure source build dependencies are present (RHEL/Fedora)
   ansible.builtin.dnf:
@@ -27,7 +27,7 @@
       - tar
       - slurm-devel
     state: present
-  when: ansible_os_family == "RedHat"
+  when: ansible_facts.os_family == "RedHat"
 
 - name: Download slurm-drmaa tarball
   ansible.builtin.get_url:

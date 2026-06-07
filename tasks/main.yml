@@ -1,7 +1,7 @@
 ---
 - name: Detect packaging type
   ansible.builtin.set_fact:
-    slurm_drmaa_pkg_type: "{{ 'deb' if ansible_os_family == 'Debian' else 'rpm' }}"
+    slurm_drmaa_pkg_type: "{{ 'deb' if ansible_facts.os_family == 'Debian' else 'rpm' }}"
 
 - name: Include source build tasks
   ansible.builtin.include_tasks: source.yml

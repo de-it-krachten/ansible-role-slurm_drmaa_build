@@ -6,14 +6,14 @@
     state: absent
   when: slurm_drmaa_cleanup | bool
   loop:
-    - "{{ ansible_env.HOME }}/rpmbuild"
+    - "{{ ansible_facts.env.HOME }}/rpmbuild"
 
 - name: Ensure real patch replaces busybox-patch
   community.general.zypper:
     name: patch
     state: present
     force_resolution: true
-  when: ansible_os_family == "Suse"
+  when: ansible_facts.os_family == "Suse"
 
 - name: Ensure RPM build dependencies are present
   ansible.builtin.package:
@@ -32,36 +32,36 @@
 - name: Set up RPM build tree
   ansible.builtin.command: rpmdev-setuptree
   args:
-    creates: "{{ ansible_env.HOME }}/rpmbuild"
+    creates: "{{ ansible_facts.env.HOME }}/rpmbuild"
 
 - name: Download release tarball for RPM build
   ansible.builtin.get_url:
     url: "https://github.com/natefoo/slurm-drmaa/releases/download/{{ slurm_drmaa_version }}/slurm-drmaa-{{ slurm_drmaa_version }}.tar.gz"
-    dest: "{{ ansible_env.HOME }}/rpmbuild/SOURCES/slurm-drmaa-{{ slurm_drmaa_version }}.tar.gz"
+    dest: "{{ ansible_facts.env.HOME }}/rpmbuild/SOURCES/slurm-drmaa-{{ slurm_drmaa_version }}.tar.gz"
     mode: "0644"
 
 - name: Extract tarball into SOURCES
   ansible.builtin.unarchive:
-    src: "{{ ansible_env.HOME }}/rpmbuild/SOURCES/slurm-drmaa-{{ slurm_drmaa_version }}.tar.gz"
-    dest: "{{ ansible_env.HOME }}/rpmbuild/SOURCES/"
+    src: "{{ ansible_facts.env.HOME }}/rpmbuild/SOURCES/slurm-drmaa-{{ slurm_drmaa_version }}.tar.gz"
+    dest: "{{ ansible_facts.env.HOME }}/rpmbuild/SOURCES/"
     remote_src: true
-    creates: "{{ ansible_env.HOME }}/rpmbuild/SOURCES/slurm-drmaa-{{ slurm_drmaa_version }}"
+    creates: "{{ ansible_facts.env.HOME }}/rpmbuild/SOURCES/slurm-drmaa-{{ slurm_drmaa_version }}"
 
 - name: Create spec file
   ansible.builtin.template:
     src: templates/rpm/spec.j2
-    dest: "{{ ansible_env.HOME }}/rpmbuild/SPECS/slurm-drmaa.spec"
+    dest: "{{ ansible_facts.env.HOME }}/rpmbuild/SPECS/slurm-drmaa.spec"
     mode: "0644"
 
 - name: Build RPM package
   ansible.builtin.command:
     cmd: >
-      rpmbuild -ba {{ ansible_env.HOME }}/rpmbuild/SPECS/slurm-drmaa.spec
+      rpmbuild -ba {{ ansible_facts.env.HOME }}/rpmbuild/SPECS/slurm-drmaa.spec
   changed_when: true
 
 - name: Find built RPM packages
   ansible.builtin.find:
-    paths: "{{ ansible_env.HOME }}/rpmbuild/RPMS"
+    paths: "{{ ansible_facts.env.HOME }}/rpmbuild/RPMS"
     patterns: "*.rpm"
     recurse: true
   register: rpm_packages
