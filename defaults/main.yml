@@ -1,0 +1,13 @@
+---
+
+slurm_drmaa_version: "1.1.5"
+
+slurm_drmaa_install_mode: "package"   # options: package, source
+
+slurm_drmaa_cleanup: true
+
+slurm_inc_dir: "/usr/include/slurm"
+slurm_lib_dir: "/usr/lib64"
+
+maintainer_name: "Mark van Huijstee"
+maintainer_email: "mark.van.huijstee@de-it-krachten.nl"

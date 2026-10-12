@@ -1,0 +1,91 @@
+---
+
+- name: Cleanup any files left from a previous run
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  when: slurm_drmaa_cleanup | bool
+  loop:
+    - /usr/src/slurm-drmaa
+    - /usr/src/slurm-drmaa-{{ slurm_drmaa_version }}
+
+- name: Ensure Debian build dependencies are present
+  ansible.builtin.apt:
+    name:
+      - build-essential
+      - devscripts
+      - debhelper
+      - dh-autoreconf
+      - autotools-dev
+      - autoconf
+      - automake
+      - libtool
+      # - slurm-wlm-dev
+      - libslurm-dev
+      - git
+    state: present
+    update_cache: yes
+
+- name: Download release tarball
+  ansible.builtin.get_url:
+    url: "https://github.com/natefoo/slurm-drmaa/releases/download/{{ slurm_drmaa_version }}/slurm-drmaa-{{ slurm_drmaa_version }}.tar.gz"
+    dest: "/usr/src/slurm-drmaa_{{ slurm_drmaa_version }}.orig.tar.gz"
+    mode: '0644'
+
+- name: Extract release tarball
+  ansible.builtin.unarchive:
+    src: "/usr/src/slurm-drmaa_{{ slurm_drmaa_version }}.orig.tar.gz"
+    dest: "/usr/src/"
+    remote_src: true
+    creates: "/usr/src/slurm-drmaa-{{ slurm_drmaa_version }}"
+
+- name: Create debian packaging directory
+  ansible.builtin.file:
+    path: "/usr/src/slurm-drmaa/debian"
+    state: directory
+    mode: "0755"
+
+- name: Deploy debian/control
+  ansible.builtin.template:
+    src: templates/deb/control.j2
+    dest: /usr/src/slurm-drmaa/debian/control
+    mode: "0644"
+
+- name: Deploy debian/changelog
+  ansible.builtin.template:
+    src: templates/deb/changelog.j2
+    dest: /usr/src/slurm-drmaa/debian/changelog
+    mode: "0644"
+
+- name: Deploy debian/rules  # noqa no-tabs
+  ansible.builtin.copy:
+    content: |
+      #!/usr/bin/make -f
+      %:
+      	dh $@ --with autoreconf
+    dest: /usr/src/slurm-drmaa/debian/rules
+    mode: "0755"
+  changed_when: true
+
+- name: Deploy debian/copyright
+  ansible.builtin.template:
+    src: templates/deb/copyright.j2
+    dest: /usr/src/slurm-drmaa/debian/copyright
+    mode: "0644"
+
+- name: Build Debian package
+  ansible.builtin.command:
+    cmd: debuild -us -uc
+  changed_when: true
+  args:
+    chdir: /usr/src/slurm-drmaa
+
+- name: Find built Debian packages
+  ansible.builtin.find:
+    paths: "/usr/src"
+    patterns: "slurm-drmaa_*.deb"
+  register: deb_packages
+
+- name: Set fact with built Debian packages
+  ansible.builtin.set_fact:
+    slurm_drmaa_built_packages: "{{ deb_packages.files | map(attribute='path') | list }}"
