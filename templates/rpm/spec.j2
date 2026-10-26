@@ -1,0 +1,47 @@
+Name:           slurm-drmaa
+Version:        {{ slurm_drmaa_version }}
+Release:        1%{?dist}
+Summary:        DRMAA library for Slurm
+
+License:        GPLv2+
+URL:            https://github.com/natefoo/slurm-drmaa
+Source0:        %{name}-%{version}.tar.gz
+
+BuildRequires:  gcc, make, autoconf, automake, libtool, slurm-devel
+Requires:       slurm
+
+%description
+Implementation of the DRMAA API for the Slurm workload manager.
+
+%prep
+%setup -q
+
+%build
+./configure --prefix=%{_prefix} \
+            --libdir=%{_libdir} \
+            --sysconfdir=%{_sysconfdir} \
+            --with-slurm-inc=/usr/include/slurm \
+            --with-slurm-lib=%{_libdir}
+make %{?_smp_mflags}
+
+%install
+rm -rf %{buildroot}
+make install DESTDIR=%{buildroot}
+
+%files
+%license COPYING
+%doc COPYING
+%{_bindir}/drmaa-run
+%{_bindir}/drmaa-run-bulk
+%{_bindir}/drmaa-job-ps
+%{_bindir}/hpc-bash
+%{_includedir}/drmaa.h
+%{_libdir}/libdrmaa.so
+%{_libdir}/libdrmaa.so.*
+%{_libdir}/libdrmaa.a
+%{_libdir}/libdrmaa.la
+%config(noreplace) %{_sysconfdir}/slurm_drmaa.conf.example
+
+%changelog
+* {{ lookup('pipe', 'date "+%a %b %d %Y"') }} {{ maintainer_name }} <{{ maintainer_email }}> - {{ slurm_drmaa_version }}-1
+- Initial RPM packaging

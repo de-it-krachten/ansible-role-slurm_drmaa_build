@@ -1,0 +1,74 @@
+---
+- name: Ensure source build dependencies are present (Debian/Ubuntu)
+  ansible.builtin.apt:
+    name:
+      - build-essential
+      - libslurm-dev
+      - automake
+      - autoconf
+      - libtool
+      - bison
+      - wget
+      - tar
+    state: present
+    update_cache: yes
+  when: ansible_facts.os_family == "Debian"
+
+- name: Ensure source build dependencies are present (RHEL/Fedora)
+  ansible.builtin.dnf:
+    name:
+      - gcc
+      - make
+      - automake
+      - autoconf
+      - libtool
+      - bison
+      - wget
+      - tar
+      - slurm-devel
+    state: present
+  when: ansible_facts.os_family == "RedHat"
+
+- name: Download slurm-drmaa tarball
+  ansible.builtin.get_url:
+    url: "https://github.com/natefoo/slurm-drmaa/releases/download/{{ slurm_drmaa_version }}/slurm-drmaa-{{ slurm_drmaa_version }}.tar.gz"
+    dest: "/usr/src/slurm-drmaa-{{ slurm_drmaa_version }}.tar.gz"
+    mode: '0644'
+
+- name: Extract source tarball
+  ansible.builtin.unarchive:
+    src: "/usr/src/slurm-drmaa-{{ slurm_drmaa_version }}.tar.gz"
+    dest: "/usr/src/"
+    remote_src: true
+    creates: "/usr/src/slurm-drmaa-{{ slurm_drmaa_version }}"
+
+- name: Configure build
+  ansible.builtin.command:
+    cmd: ./configure --prefix=/usr/lib/slurm-drmaa
+  changed_when: true
+  args:
+    chdir: "/usr/src/slurm-drmaa-{{ slurm_drmaa_version }}"
+
+- name: Build from source
+  ansible.builtin.command:
+    cmd: make
+  changed_when: true
+  args:
+    chdir: "/usr/src/slurm-drmaa-{{ slurm_drmaa_version }}"
+
+- name: Install from source
+  ansible.builtin.command:
+    cmd: make install
+  changed_when: true
+  args:
+    chdir: "/usr/src/slurm-drmaa-{{ slurm_drmaa_version }}"
+
+- name: Verify installation
+  ansible.builtin.find:
+    paths: "/usr/lib/slurm-drmaa/lib"
+    patterns: "libdrmaa*"
+  register: libdrmaa_files
+
+- name: Debug installed files
+  ansible.builtin.debug:
+    msg: "{{ libdrmaa_files.files | map(attribute='path') | list }}"
